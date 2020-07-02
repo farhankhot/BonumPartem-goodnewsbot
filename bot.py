@@ -35,10 +35,19 @@ class GoodNewsBot:
 
     def get_titles(self):
         submissions={}
+        # Will add more subs in the future
         for submission in self.reddit_client.subreddit("UpliftingNews").hot(limit=10):
-            # submissions[submission.title] = submission.url
-            self.twitter_client.update_status(submission.title)
-        print(submissions)
+            if (len(submission.title) > 140):
+                continue
+            else:
+                submissions[submission.title] = submission.url
+                
+        # Post and Print each key value pair
+        for key in submissions:
+            tweet = "{}:{}".format(key, submissions[key])
+            self.twitter_client.update_status(tweet)
+            print(key, submissions[key])
+
 
     # Get the news
     #def get_posts(self):
