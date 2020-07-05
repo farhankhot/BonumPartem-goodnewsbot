@@ -5,14 +5,14 @@ import time
 import json
 
 
-from bs4 import BeautifulSoup
+# from bs4 import BeautifulSoup
 
-twitter_consumer_key = "qXqWTRAOb1YnVk9gk7KBOBjSv"
-twitter_consumer_secret = "YCMq1wbIXu12r1rX9LN5uTxlpCJ59QkrcioK0ktTpwrQmBojS7"
-twitter_access_token = "1514550494-Al6a0LososSY2JASMwAgrJrPqINMylwoMbAe67A"
-twitter_access_token_secret = "xkUBue8SDn4XCoqj2y76My6qA0iI4V9BHooSV2jubnU7x"
-reddit_client_id = "lOk5XHqaCil21A"
-reddit_client_secret = "dmZZPY47BPhV6mCzrmIA85oMEFg"
+twitter_consumer_key = ""
+twitter_consumer_secret = ""
+twitter_access_token = ""
+twitter_access_token_secret = ""
+reddit_client_id = ""
+reddit_client_secret = ""
 
 class GoodNewsBot:
     """docstring forGoodNews"""
