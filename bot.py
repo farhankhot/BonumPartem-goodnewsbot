@@ -40,70 +40,73 @@ class GoodNewsBot:
         api = tweepy.API(auth)
         return api
 
-    # ToDo: Refractor this function
-    def get_titles(self):
+    def get_old_tweets(self):
+        # get_previous_tweets = self.twitter_client.user_timeline(tweet_mode="extended")
 
-        get_previous_tweets = self.twitter_client.user_timeline()
-
-        old_tweets_dict={}
         old_tweets_list=[]
-        for tweet in get_previous_tweets:
+        # Need to use tweepy.Cursor object otherwise run into pagination issues (it only gets first page tweets)
+        for tweet in tweepy.Cursor(self.twitter_client.user_timeline, tweet_mode="extended").items():
             for x in tweet._json['entities']['urls']:
                 expanded_url = x['expanded_url']
                 indices = x['indices']
+                # print(x)
                 # Twitter gives status text in form 'title''t.co url''expanded url'
                 # This removes it by getting the indices of when the url starts and ends and replacing it with ''
                 for indice in indices:
                     first_indice = indices[0]
                     second_indice = indices[1]
-                text_of_tweet = tweet._json['text']
-                new_s = "".join( (text_of_tweet[:first_indice], "", text_of_tweet[second_indice: - 1]) )
-                # Doesnt have form {}:{} like new_tweets_list because twitter for some reason adds the :
-                # Automatically when there is text and a url in a tweet
+                text_of_tweet = tweet._json['full_text']
+                new_s = "".join( (text_of_tweet[:first_indice], "", text_of_tweet[second_indice:]) )
                 old_post="{}{}".format(new_s, expanded_url)
                 old_tweets_list.append(old_post)
 
-            # print(expanded_url)
-            # print("new formatted string: " + new_s)
-
+                # print(old_post)
+                # print("" + new_s)
         old_tweets_set = set(old_tweets_list)
-        # Prints old tweets
+        # Prints old tweets (list cause it gives it in order)
         # for _ in old_tweets_list:
         #     print("old shit: " + _)
+        return old_tweets_set
 
+    def get_reddit_posts(self):
         # Fetch new posts from reddit
         new_tweets_list=[]
-        for submission in self.reddit_client.subreddit("UpliftingNews").hot(limit=10):
-            # 116 cause when its 140 or even 120 twitter doesn't give the full text and gives a twitter status url
+        # How is limit divided for multiple subreddits ? Or is it random ? (Not a huge deal)
+        for submission in self.reddit_client.subreddit("UpliftingNews+Positive_News").hot(limit=50):
+            # 200 cause when its 280 twitter doesn't give the full text and gives a twitter status url
             # of the tweet which makes the set difference method think its new and therefore tries to post it which
-            # gives a 'status duplicate error'
-            if (len(submission.title) < 116 ):
+            # gives a 'status duplicate error' (not sure about this anymore)
+            if (len(submission.title) < 200 ):
                 # Changing & to and cause twitter does some fucky shit
                 processed_title = submission.title.replace("&", "and")
-                post = "{}:{}".format(processed_title, submission.url)
-                new_tweets_list.append(post)
 
+                post = "{} {}".format(processed_title, submission.url)
+                new_tweets_list.append(post)
+            # print(proxcessed_title)
         new_tweets_set = set(new_tweets_list)
         # Print fetched posts from reddit
-        # for _ in new_tweets_list:
+        # for _ in new_tweets_set:
         #     print("fetched shit: " + _)
+        return new_tweets_set
 
+    def post_tweets(self):
         final_tweets = set()
-        final_tweets = new_tweets_set.difference(old_tweets_set)
+        # final_tweets = new_tweets_set.difference(old_tweets_set)
+        final_tweets = self.get_reddit_posts().difference(self.get_old_tweets())
 
         # Post and print unique (not already posted) tweets
         if len(final_tweets) > 0:
             print("how many new posts: %s " % (len(final_tweets) ))
             for tweet in final_tweets:
-                print("new shit posting: " , tweet )
+                # print("posting new tweet: " , tweet )
                 # print (type(tweet))
                 self.twitter_client.update_status(tweet)
         else:
             print("no new stuff: %s" % len(final_tweets)) # should be 0
 
-        time.sleep(10)
+        time.sleep(60)
 
 if __name__ == '__main__':
     bot = GoodNewsBot()
     while True:
-        bot.get_titles()
+        bot.post_tweets()
